@@ -12,6 +12,8 @@ IDs: G-NNN = a task for Gemini, C-NNN = a task for Claude (e.g. "turn Gemini's d
 | G-001 | smartbot | Gemini | checked | tasks/smartbot/G-001-check-texts.md | Help texts (why it matters / how to fix) for the new audit checks, as CSV | 78 of 78 checks covered (task said 77, list has 78). Cleaned CSV: answers/smartbot/G-001-checks.csv (all cells quoted; Gemini's raw had unquoted commas, fixed by Claude). Lengths within limits, no key clashes. Not yet used in SmartBot. |
 | G-002 | smartbot | Gemini | open | tasks/smartbot/G-002-ahrefs-deep-research.md | Deep research: Ahrefs Page explorer presets, Advanced filter, Link explorer, every URL details panel tab, full issue list | - |
 
+Decision 17 Nov 2026: mailbox app on the Plesk VPS is SHELVED (Mahmud will not pay for the Gemini API). Jules is shut down (31 Dec 2026). Manual flow below is the final one.
+
 ## How a Gemini task runs (manual, simple - Gemini cannot write to GitHub)
 1. Claude writes the task file in tasks/<project>/ and runs `./make_pack.sh G-NNN` (one file with the rules + task + context), sends it to Mahmud.
 2. Mahmud opens a NEW Gemini chat, attaches the pack (+ > Upload files), types: Read this file fully and do the task in it. Send long answers in parts.

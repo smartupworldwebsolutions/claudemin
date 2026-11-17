@@ -1,3 +1,5 @@
+> **STATUS 17 Nov 2026: SHELVED by Mahmud (no paid Gemini API, no VPS work). Manual flow stays (see STATUS.md). Revisit only if he decides to pay for the API.**
+
 # Mailbox app - design plan (Step 1)
 
 Written by Claude, 17 Nov 2026. Status: **APPROVED by Mahmud on 17 Nov 2026, with the server rules in Section 7.**
