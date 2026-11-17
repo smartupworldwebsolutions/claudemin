@@ -118,7 +118,7 @@ Claude (claude.ai)                    Your server                              G
 
 ## 6. What only you can do (kept to the minimum)
 
-1. **Server:** tell me RAM, OS and whether you can log in (I ask you next). Then give me SSH or Plesk access once; I save it.
+1. **Server:** the Plesk VPS newdev.nidohome.eu (still running; only SmartBot was moved off it). Tell me RAM, OS and whether you can log in. Then give me SSH or Plesk access once; I save it.
 2. **Gemini API key:** in Google AI Studio, create a key on a project **with billing turned on**, add a small prepaid credit
    (e.g. $10), and set a budget alert / spend limit. I'll send exact clicks when we reach Step 4. (Note: prepaid credit expires
    after 12 months and stops the key when it hits $0 - that is a good safety net.)
