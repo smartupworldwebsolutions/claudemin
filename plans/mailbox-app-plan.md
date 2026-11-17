@@ -1,6 +1,7 @@
 # Mailbox app - design plan (Step 1)
 
-Written by Claude, 17 Nov 2026. Status: **waiting for Mahmud's approval. No code yet.**
+Written by Claude, 17 Nov 2026. Status: **APPROVED by Mahmud on 17 Nov 2026, with the server rules in Section 7.**
+Next: Step 2 (Section 5). Section 7 wins over anything else in this file.
 Goal: Claude posts a task, a small worker on a server asks Gemini, the answer comes back to Claude. No copy-paste by Mahmud.
 The manual bridge (Gemini app + `bridge/inbox` on the PC) stays as the fallback.
 
@@ -28,8 +29,12 @@ The manual bridge (Gemini app + `bridge/inbox` on the PC) stays as the fallback.
 - 30 tasks a month: **about $5-15 a month.** Default caps below keep it under $15 even if something goes wrong.
 - Model choice per task: Flash for bulk text, Pro for research and code drafts. Claude picks; you can override.
 
-**Honest limit:** very deep research (like G-002, the Ahrefs study) is still better in the Gemini **app's** Deep Research, which
-the API does not fully copy. For those few tasks we keep the manual route. Everything else goes through the mailbox.
+**Deep Research can be called by a program (checked 17 Nov 2026).** Google's Deep Research agent is available through the
+Gemini API's Interactions API (agent `deep-research-preview-04-2026`, and a bigger `deep-research-max-preview-04-2026`).
+It is a preview, paid tier only. The program starts it "in the background" and checks back; a run usually takes 5-15 minutes,
+max 60. Google's estimate: **about $1-3 per task** (Max: $3-7), about half of it for Google Search queries. So big research like
+G-002 also goes through the mailbox, no copy-paste. The worker marks these tasks "research" and checks the cap before starting.
+The manual route stays as the fallback.
 
 ---
 
@@ -74,7 +79,8 @@ Claude (claude.ai)                    Your server                              G
   already busy, and it stays useful later if we add heavier local jobs.
 - **Daily caps (safe defaults, editable in plain-English settings):**
   - max **1 million tokens per day**,
-  - max **$1 per day** and **$15 per month**,
+  - max **$5 per day** and **$20 per month** (raised from $1/$15 so one Deep Research task fits; a Deep Research task is
+    counted as $3 before it starts and corrected when it ends),
   - when a cap is reached: jobs wait until the next day, `mailbox_status` says why.
   - Spend is counted from Google's own token numbers on every answer. As a second safety net, you also set a spend limit in
     your Google billing account (Section 6).
@@ -130,7 +136,36 @@ Everything else (install, HTTPS certificate in Plesk, settings, tests) I do.
 
 ---
 
+## 7. The server and its rules (from Mahmud, 17 Nov 2026 - these win)
+
+**Server:** Plesk VPS newdev.nidohome.eu. AlmaLinux 8.10, Plesk Obsidian 18.0.82.3, Python 3.6.8, 48 CPU cores, 251 GB RAM,
+1.3 TB free disk, load about 0.1. **Production: it hosts many real client websites.**
+
+Rules, and how the app meets each one:
+| Rule | How |
+|---|---|
+| Own small user, never root, one folder | Linux user `mailbox`, everything in `/home/mailbox/` (app, data, logs, config). The app refuses to start as root. |
+| Lowest priority, ~500 MB memory, low CPU | Starts itself at `nice 19` + `ionice` idle. Sets its own hard memory limit (Python `resource.setrlimit`, 500 MB). Self-throttles: if its own CPU use goes over about 5% of one core, it sleeps. It mostly waits on Google anyway. |
+| Change nothing system-wide, no Plesk settings, no other sites | No systemd unit, no packages, no firewall changes. Kept alive by the `mailbox` user's own crontab (`@reboot` + a check every 5 minutes). Listens on 127.0.0.1 only. |
+| Only one new subdomain through Plesk | One subdomain (e.g. `mailbox.<domain>`, domain chosen in Step 3). Plesk gives it HTTPS (Let's Encrypt) and passes requests to the app on 127.0.0.1 - set on that subdomain only. |
+| Load guard measures CPU across all 48 cores, pauses first | Reads `/proc/stat` twice and works out how busy **all 48 cores together** are (iowait counts as busy). Pauses at 60% busy or RAM over 60%, resumes after 5 minutes under 50%. The app always gives way first; sites are never slowed to finish a task. |
+| One command stops and fully removes it | `sudo /home/mailbox/app/uninstall.sh`: stops the app, removes the crontab, deletes the `mailbox` user and folder, and prints the one Plesk click/command to remove the subdomain. |
+| Python 3.6-safe, standard library | No f-strings, no `dataclasses`, no `ThreadingHTTPServer` (use `socketserver.ThreadingMixIn`), `subprocess.run` without `capture_output`/`text`. `sqlite3`, `urllib.request`, `json`, `http.server` only. |
+
+## 8. Step 2 brief (for the Step 2 chat)
+
+Build in this repo under `mailbox/` (install from here to the server later with the read-only deploy key):
+- `mailbox/app/`: queue (SQLite), task states open/doing/answered/blocked/cancelled, load guard, caps (tokens + $ per day/month),
+  retry with back-off, resume after restart, plain-English `settings.ini` with safe defaults, password-protected log page,
+  a **fake Gemini** that returns a canned answer (real Gemini is Step 4). A small local JSON API the connector (Step 3) will use.
+- `mailbox/install.sh` (run once as root: creates user `mailbox`, folder, crontab; nothing else) and `mailbox/uninstall.sh`.
+- Tests that prove: refuses root; pauses at a fake 70% CPU and resumes; memory limit set; caps stop a job; restart resumes a
+  half-done job; one job at a time; install then uninstall leaves nothing behind. Run them under Python 3.6 if the sandbox can.
+- Push only when the tests pass; update STATUS.md; then give Mahmud the exact install commands for the server.
+
 ## Sources (read 17 Nov 2026)
+- Gemini Deep Research agent (Interactions API) - https://docs.cloud.google.com/gemini-enterprise-agent-platform/agents/google/deep-research
+- Deep Research cost per task (Google's April 2026 estimates) - https://tokencost.app/blog/gemini-deep-research-agent-cost
 - Google Developers Blog, "Transitioning Gemini CLI to Antigravity CLI", 19 May 2026 - https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/
 - Google AI forum, staff answer on agy through an MCP bridge - https://discuss.ai.google.dev/t/is-using-the-official-agy-cli-through-a-local-mcp-server-with-third-party-ai-agents-permitted/184829
 - Antigravity plans (Pro quota shape) - https://antigravity.google/docs/plans

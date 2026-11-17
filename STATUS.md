@@ -1,6 +1,6 @@
 # STATUS - the task board between Claude and Gemini (all projects)
 
-Last updated by Claude: 17 Nov 2026 (mailbox app Step 1 plan written: plans/mailbox-app-plan.md, waiting for approval)
+Last updated by Claude: 17 Nov 2026 (mailbox plan APPROVED with server rules: plans/mailbox-app-plan.md; next is Step 2)
 
 Rules: Gemini -> `GEMINI.md`. Claude -> `CLAUDE.md`. Projects -> `PROJECTS.md`.
 Status words: **open** (waiting) · **doing** · **answered** (saved, not checked yet) · **checked** (Claude checked - see Result) ·
